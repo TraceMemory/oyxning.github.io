@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>足球成长方案生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: lightblue;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #007BFF;
+            color: white;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>足球成长方案生成器</h1>
+
+        <!-- 输入部分 -->
+        <form id="footballForm">
+            <div class="input-group">
+                <label for="name">姓名:</label>
+                <input type="text" id="name" placeholder="请输入姓名">
+            </div>
+            <div class="input-group">
+                <label for="age">年龄:</label>
+                <input type="number" id="age" placeholder="请输入年龄">
+            </div>
+            <div class="input-group">
+                <label for="weight">体重 (KG):</label>
+                <input type="number" id="weight" placeholder="请输入体重">
+            </div>
+            <div class="input-group">
+                <label for="health">健康状况:</label>
+                <input type="text" id="health" placeholder="请输入健康状况">
+            </div>
+            <div class="input-group">
+                <label for="awards">过往获奖 (每项一行):</label>
+                <textarea id="awards" rows="5" placeholder="请输入过往获奖"></textarea>
+            </div>
+            <div class="input-group">
+                <button type="button" onclick="generatePlan()">生成成长方案</button>
+            </div>
+        </form>
+
+        <!-- 输出部分 -->
+        <div id="output">
+            <h2>生成方案:</h2>
+            <textarea id="plan" rows="10" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        async function generatePlan() {
+            // 获取用户输入
+            const name = document.getElementById('name').value.trim();
+            const age = document.getElementById('age').value.trim();
+            const weight = document.getElementById('weight').value.trim();
+            const health = document.getElementById('health').value.trim();
+            const awards = document.getElementById('awards').value.trim().split('\n');
+
+            // 输入验证
+            if (!name || !age || !weight || !health) {
+                alert("请输入完整信息！");
+                return;
+            }
+
+            // 构建请求体
+            const messages = [
+                {
+                    role: "system",
+                    content: "你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全、有帮助、准确的回答。同时，你会拒绝一切涉及恐怖主义、种族歧视、黄色暴力等问题的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
+                },
+                {
+                    role: "user",
+                    content: `
+                        请根据以下用户数据生成一份足球方面的个性化成长方案：
+
+                        姓名: ${name}
+                        年龄: ${age}
+                        体重: ${weight} KG
+                        健康状况: ${health}
+                        获奖情况: ${awards.join(", ") || '暂无'}
+
+                        方案需要包括训练建议、饮食建议和比赛策略。
+                    `,
+                },
+            ];
+
+            // API 配置
+            const API_KEY = "sk-t5TlFcNrbe1H8RdEaEXNXu0YwW1T74n6YoFwrF6sE51wIBZu";
+            const API_URL = "https://api.moonshot.cn/v1/chat/completions";
+
+            // 发送请求到 Moonshot AI
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "moonshot-v1-8k",
+                        messages: messages,
+                        temperature: 0.3,
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API 请求失败，状态码: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const plan = data.choices[0].message.content;
+
+                // 显示结果
+                document.getElementById('plan').value = plan;
+            } catch (error) {
+                alert(`请求失败，请检查网络或 API 配置。\n错误信息: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
